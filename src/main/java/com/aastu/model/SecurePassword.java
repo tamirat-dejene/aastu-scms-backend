@@ -5,23 +5,13 @@ import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.codec.binary.Hex;
 
-import com.aastu.utils.*;
+import com.aastu.utils.Util;
 
 public class SecurePassword {
-  private String salt;
   private String hashedPassword;
 
-  public SecurePassword(String salt, String hashedPassword) {
-    this.salt = salt;
+  public SecurePassword(String hashedPassword) {
     this.hashedPassword = hashedPassword;
-  }
-
-  public String getSalt() {
-    return salt;
-  }
-
-  public void setSalt(String salt) {
-    this.salt = salt;
   }
 
   public String getHashedPassword() {
@@ -34,7 +24,7 @@ public class SecurePassword {
 
   @Override
   public String toString() {
-    return salt + ":" + hashedPassword;
+    return hashedPassword;
   }
 
   @Override
@@ -46,11 +36,6 @@ public class SecurePassword {
     if (getClass() != obj.getClass())
       return false;
     SecurePassword other = (SecurePassword) obj;
-    if (salt == null) {
-      if (other.salt != null)
-        return false;
-    } else if (!salt.equals(other.salt))
-      return false;
     if (hashedPassword == null) {
       if (other.hashedPassword != null)
         return false;
@@ -69,13 +54,14 @@ public class SecurePassword {
 
   public static SecurePassword saltAndHashPassword(int saltByteSize, String password, String algorithm) {
     String salt = Util.generateSalt(saltByteSize);
-    String saltedPasword = salt + ":" + password;
+    String saltedPasword = salt + password;
 
     MessageDigest passwordDigest;
     try {
       passwordDigest = MessageDigest.getInstance(algorithm);
       byte[] hashedPasswordByteArray = passwordDigest.digest(saltedPasword.getBytes());
-      return new SecurePassword(salt, Hex.encodeHexString(hashedPasswordByteArray));
+      String saltHash = salt + ":" + Hex.encodeHexString(hashedPasswordByteArray);
+      return new SecurePassword(saltHash);
     } catch (NoSuchAlgorithmException e) {
       System.out.println(e.getMessage());
     }
@@ -86,13 +72,14 @@ public class SecurePassword {
     return saltAndHashPassword(salt, password, "SHA-256");
   }
 
-  public static SecurePassword saltAndHashPassword(String salt, String password, String algorithm) {
-    String saltedPasword = salt + ":" + password;
+  static SecurePassword saltAndHashPassword(String salt, String password, String algorithm) {
+    String saltedPasword = salt + password;
     MessageDigest passwordDigest;
     try {
       passwordDigest = MessageDigest.getInstance(algorithm);
       byte[] hashedPasswordByteArray = passwordDigest.digest(saltedPasword.getBytes());
-      return new SecurePassword(salt, Hex.encodeHexString(hashedPasswordByteArray));
+      String saltHash = salt + ":" + Hex.encodeHexString(hashedPasswordByteArray);
+      return new SecurePassword(saltHash);
     } catch (NoSuchAlgorithmException e) {
       System.out.println(e.getMessage());
     }
@@ -110,5 +97,4 @@ public class SecurePassword {
     var salt = saltandHash[0];
     return storedPassword.equals(saltAndHashPassword(salt, inputPassword, algorithm).toString());
   }
-
 }

@@ -8,9 +8,9 @@ import com.sun.net.httpserver.HttpHandler;
 public class ClearanceRoute implements HttpHandler {
 
   @Override
-  public void handle(HttpExchange arg0) throws IOException {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'handle'");
+  public void handle(HttpExchange exchange) throws IOException {
+    exchange.getRequestURI().getQuery();
+    
   }
   
 }

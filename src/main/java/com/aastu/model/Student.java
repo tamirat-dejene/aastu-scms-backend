@@ -8,10 +8,10 @@ public class Student {
   private Department department;
   private Degree degree;
   private AdmissionType admissionType;
-  private String password;
-  
-  public Student(String firstName, String middleName, String lastName, String idNumber, String emailAddress, String section, int classYear,
-      College college, Department department, Degree degree, AdmissionType admissionType) {
+
+  public Student(String firstName, String middleName, String lastName, String idNumber, String emailAddress,
+      String section, int classYear, College college, Department department, Degree degree,
+      AdmissionType admissionType) {
     this.firstName = firstName;
     this.middleName = middleName;
     this.lastName = lastName;
@@ -28,51 +28,67 @@ public class Student {
   public String getFirstName() {
     return firstName;
   }
+
   public void setFirstName(String firstName) {
     this.firstName = firstName;
   }
+
   public String getMiddleName() {
     return middleName;
   }
+
   public void setMiddleName(String middleName) {
     this.middleName = middleName;
   }
+
   public String getLastName() {
     return lastName;
   }
+
   public void setLastName(String lastName) {
     this.lastName = lastName;
   }
+
   public String getIdNumber() {
     return idNumber;
   }
+
   public void setIdNumber(String idNumber) {
     this.idNumber = idNumber;
   }
+
   public String getEmailAddress() {
     return emailAddress;
   }
+
   public void setEmailAddress(String emailAddress) {
     this.emailAddress = idNumber;
   }
+
   public String getSection() {
     return section;
   }
+
   public void setSection(String section) {
     this.section = section;
   }
+
   public int getClassYear() {
     return classYear;
   }
+
   public void setClassYear(int classYear) {
     this.classYear = classYear;
   }
+
   public College getCollege() {
     return college;
   }
+
   public void setCollege(College college) {
     this.college = college;
   }
+
   public Department getDepartment() {
     return department;
   }
@@ -97,11 +113,4 @@ public class Student {
     this.admissionType = admissionType;
   }
 
-  public String getPassword() {
-    return password;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
-  }
 }

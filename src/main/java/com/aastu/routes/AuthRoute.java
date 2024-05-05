@@ -39,8 +39,36 @@ public class AuthRoute implements HttpHandler {
   }
 
   private static void handleLogin(HttpExchange exchange) throws IOException {
+    String method = exchange.getRequestMethod();
+    switch (method) {
+      case "GET":
+        handleLoginGetRequest(exchange);
+        break;
+      case "POST":
+        handleLoginPostRequest(exchange);
+    }
+  }
+
+  private static void handleLoginGetRequest(HttpExchange exchange) throws IOException {
+    String authHeader = exchange.getRequestHeaders().getFirst("Authorization");
+    if (authHeader == null) {
+      sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, "{ \"Authenticated\": \"false\"}");
+      return;
+    }
+    // Separate the Bearer from the token i.e. Authorization = Bearer token
+    String token = authHeader.split(" ")[1];
+
+    // We will validate using the token sent inside the header
+    if (Util.verifyUser(token))
+      sendResponse(exchange, HttpURLConnection.HTTP_OK, "{\"Authenticated\": \"true\"}");
+    else
+      sendResponse(exchange, HttpURLConnection.HTTP_UNAUTHORIZED, "{ \"Authenticated\": \"false\"}");
+  }
+  
+  private static void handleLoginPostRequest(HttpExchange exchange) throws IOException {
     // Reading Json data from the request body
     String requestBody = ReqRes.readRequestBody(exchange.getRequestBody());
+
     // Convert JSON data to Login object
     Login login = (Login) ReqRes.makeModelFromJson(requestBody, Login.class);
     // Rechecking validity of the login info
@@ -55,6 +83,7 @@ public class AuthRoute implements HttpHandler {
       sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, errorJson);
       return;
     }
+
     // Database query
     try {
       String storedPassword = Database.getUserPassword(login.getIdNumber());
@@ -62,29 +91,35 @@ public class AuthRoute implements HttpHandler {
 
       if (!SecurePassword.authenticatePassword(inputPassword, storedPassword)) {
         var error = new Message();
-        error.setMessage("Unauthenticated user: provided incorrect password");
+        error.setMessage("Incorrect username/password");
         sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, ReqRes.makeJsonString(error));
         return;
       }
     } catch (SQLException e) {
       var error = new Message();
-      error.setMessage("Server Error");
+      error.setMessage("Server Error! We appriciate your patience!");
       sendResponse(exchange, HttpURLConnection.HTTP_INTERNAL_ERROR, ReqRes.makeJsonString(error));
       return;
     }
     // The user is authenticated: Sign the user with jwt
     String payLoad = ReqRes.makeJsonString(login);
     String jwt = Util.signUser(payLoad);
-    
+
     exchange.getResponseHeaders().set("Authorization", "Bearer " + jwt);
     sendResponse(exchange, HttpURLConnection.HTTP_OK, "{\"Authenticated\": \"true\"}");
   }
-
+  
   private static void handleSignUp(HttpExchange exchange) throws IOException {
     // Request body
     String requestBody = ReqRes.readRequestBody(exchange.getRequestBody());
     Student student = (Student) ReqRes.makeModelFromJson(requestBody, Student.class);
 
+    // Read hashed password from the request header
+    String passwordJson = exchange.getRequestHeaders().getFirst("Password");
+    SecurePassword password = (SecurePassword) ReqRes.makeModelFromJson(passwordJson, SecurePassword.class);
+    String hashedPassword = password.getHashedPassword();
+
+    System.out.println(requestBody);
 
     // Validating the user request inputs.
     try {
@@ -95,7 +130,6 @@ public class AuthRoute implements HttpHandler {
       Validate.name(student.getMiddleName());
       Validate.name(student.getLastName());
       Validate.classYear(Integer.toString(student.getClassYear()));
-      Validate.password(student.getPassword());
     } catch (Error e) {
       var error = new Message();
       error.setMessage(e.getMessage());
@@ -105,7 +139,8 @@ public class AuthRoute implements HttpHandler {
 
     // It has passed the validation: now save to database
     try {
-      Database.saveStudent(student, student.getPassword());
+      Database.saveStudent(student, hashedPassword);
+      System.out.println(hashedPassword);
     } catch (SQLException e) {
       var error = new Message();
       error.setMessage(e.getMessage());

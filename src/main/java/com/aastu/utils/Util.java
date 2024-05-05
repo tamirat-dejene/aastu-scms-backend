@@ -12,12 +12,14 @@ import org.apache.commons.codec.binary.Hex;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.auth0.jwt.interfaces.JWTVerifier;
 
 public class Util {
   public static Properties getEnv() {
     Properties properties = new Properties();
-    try (InputStream input = new FileInputStream("src/main/resources/config.properties")) {
+    try (InputStream input = new FileInputStream("http-server/src/main/resources/config.properties")) {
       properties.load(input);
       return properties;
     } catch (IOException e) {
@@ -41,15 +43,30 @@ public class Util {
     return Hex.encodeHexString(salt);
   }
 
-
   public static String signUser(String payLoad) {
     String secretKey = Util.getEnv().getProperty("ACCESS_TOKEN_SECRET_KEY");
     Algorithm algorithm = Algorithm.HMAC256(secretKey);
     return JWT.create().withSubject(payLoad).withIssuedAt(new Date()).sign(algorithm);
   }
+
+  public static boolean verifyUser(String token) {
+    String secretKey = Util.getEnv().getProperty("ACCESS_TOKEN_SECRET_KEY");
+    DecodedJWT decodedJWT;
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(secretKey);
+      JWTVerifier verifier = JWT.require(algorithm).build();
+
+      decodedJWT = verifier.verify(token);
+    } catch (JWTVerificationException exception) {
+      return false;
+    }
+
+    System.out.println(decodedJWT.getSignature());
+    return true;
+  }
+
   public static void main(String[] args) {
     Util.getEnv();
   }
-
 
 }
