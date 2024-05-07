@@ -46,5 +46,7 @@ dependency-reduced-pom.xml
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
-config.properties
+
 *.properties
+
+src/main/resources/config.properties
