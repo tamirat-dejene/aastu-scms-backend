@@ -4,7 +4,6 @@ public class ClearanceApplication {
   private String studentId;
   private String reason;
   private Status status;
-  
   public ClearanceApplication(String studentId, String reason, Status status) {
     this.studentId = studentId;
     this.reason = reason;
@@ -25,9 +24,8 @@ public class ClearanceApplication {
   public Status getStatus() {
     return status;
   }
+
   public void setStatus(Status status) {
     this.status = status;
   }
-
-  
 }

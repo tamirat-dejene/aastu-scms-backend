@@ -33,7 +33,7 @@ public class AuthRoute implements HttpHandler {
         handLogout(exchange);
         break;
       default:
-        sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, "{\"message\": \"Bad Request\"}");
+        ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, "{\"message\": \"Bad Request\"}");
         break;
     }
   }
@@ -52,7 +52,7 @@ public class AuthRoute implements HttpHandler {
   private static void handleLoginGetRequest(HttpExchange exchange) throws IOException {
     String authHeader = exchange.getRequestHeaders().getFirst("Authorization");
     if (authHeader == null) {
-      sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, "{ \"Authenticated\": \"false\"}");
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, "{ \"Authenticated\": \"false\"}");
       return;
     }
     // Separate the Bearer from the token i.e. Authorization = Bearer token
@@ -60,9 +60,9 @@ public class AuthRoute implements HttpHandler {
 
     // We will validate using the token sent inside the header
     if (Util.verifyUser(token))
-      sendResponse(exchange, HttpURLConnection.HTTP_OK, "{\"Authenticated\": \"true\"}");
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_OK, "{\"Authenticated\": \"true\"}");
     else
-      sendResponse(exchange, HttpURLConnection.HTTP_UNAUTHORIZED, "{ \"Authenticated\": \"false\"}");
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_UNAUTHORIZED, "{ \"Authenticated\": \"false\"}");
   }
   
   private static void handleLoginPostRequest(HttpExchange exchange) throws IOException {
@@ -80,7 +80,7 @@ public class AuthRoute implements HttpHandler {
       var error = new Message();
       error.setMessage(e.getMessage());
       errorJson = ReqRes.makeJsonString(error);
-      sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, errorJson);
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, errorJson);
       return;
     }
 
@@ -92,13 +92,13 @@ public class AuthRoute implements HttpHandler {
       if (!SecurePassword.authenticatePassword(inputPassword, storedPassword)) {
         var error = new Message();
         error.setMessage("Incorrect username/password");
-        sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, ReqRes.makeJsonString(error));
+        ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, ReqRes.makeJsonString(error));
         return;
       }
     } catch (SQLException e) {
       var error = new Message();
       error.setMessage("Server Error! We appriciate your patience!");
-      sendResponse(exchange, HttpURLConnection.HTTP_INTERNAL_ERROR, ReqRes.makeJsonString(error));
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_INTERNAL_ERROR, ReqRes.makeJsonString(error));
       return;
     }
     // The user is authenticated: Sign the user with jwt
@@ -106,7 +106,7 @@ public class AuthRoute implements HttpHandler {
     String jwt = Util.signUser(payLoad);
 
     exchange.getResponseHeaders().set("Authorization", "Bearer " + jwt);
-    sendResponse(exchange, HttpURLConnection.HTTP_OK, "{\"Authenticated\": \"true\"}");
+    ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_OK, "{\"Authenticated\": \"true\"}");
   }
   
   private static void handleSignUp(HttpExchange exchange) throws IOException {
@@ -133,7 +133,7 @@ public class AuthRoute implements HttpHandler {
     } catch (Error e) {
       var error = new Message();
       error.setMessage(e.getMessage());
-      sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, ReqRes.makeJsonString(error));
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, ReqRes.makeJsonString(error));
       return;
     }
 
@@ -144,26 +144,18 @@ public class AuthRoute implements HttpHandler {
     } catch (SQLException e) {
       var error = new Message();
       error.setMessage(e.getMessage());
-      sendResponse(exchange, HttpURLConnection.HTTP_INTERNAL_ERROR, ReqRes.makeJsonString(error));
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_INTERNAL_ERROR, ReqRes.makeJsonString(error));
       return;
     }
 
     // Send success response
     var message = new Message();
     message.setMessage("Operation Successful.");
-    sendResponse(exchange, HttpURLConnection.HTTP_CREATED, ReqRes.makeJsonString(message));
+    ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_CREATED, ReqRes.makeJsonString(message));
   }
 
   private static void handLogout(HttpExchange exchange) {
   }
-
-  private static void sendResponse(HttpExchange exchange, int statusCode, String jsonBody) throws IOException {
-    exchange.sendResponseHeaders(statusCode, jsonBody.getBytes().length);
-    exchange.getResponseHeaders().set("Content-Type", "application/json");
-    exchange.getResponseBody().write(jsonBody.getBytes());
-    exchange.getResponseBody().close();
-  }
-
 
   public static void main(String[] args) {
   }

@@ -5,11 +5,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Properties;
+import java.util.UUID;
 
 import org.apache.commons.codec.binary.Hex;
 
+import com.aastu.model.Login;
+import com.aastu.model.Payload;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
@@ -60,13 +64,40 @@ public class Util {
     } catch (JWTVerificationException exception) {
       return false;
     }
-
-    System.out.println(decodedJWT.getSignature());
+    decodedJWT.getPayload();
     return true;
   }
 
+  public static String getDecodedPayload(String token) {
+    DecodedJWT decodedJWT = JWT.decode(token);
+    byte[] payLoad = Base64.getDecoder().decode(decodedJWT.getPayload());
+
+    // The payload parts sub and iat(issued at) and we need the sub part
+    Payload payload2 = new Payload();
+    payload2 = (Payload) ReqRes.makeModelFromJson(new String(payLoad), Payload.class);
+
+    return payload2.getSub();
+  }
+
+  public static UUID generateUniqueId(String name) {
+    UUID uuid = UUID.fromString("00000000-0000-0000-0000-000000000000");
+    return UUID.nameUUIDFromBytes((uuid.toString() + name).getBytes());
+  }
+
   public static void main(String[] args) {
-    Util.getEnv();
+    var login = new Login();
+    login.setIdNumber("ETS1518/14");
+    login.setPassword("abcdef");
+    
+    String token = Util.signUser(ReqRes.makeJsonString(login));
+
+    System.out.println(Util.getDecodedPayload(token));
+
+    UUID id = Util.generateUniqueId("ETS1518/14");
+
+    String base64Id = Base64.getEncoder().encodeToString(id.toString().getBytes());
+    System.out.println(base64Id);
+    System.out.println(Base64.getDecoder().decode(base64Id));
   }
 
 }

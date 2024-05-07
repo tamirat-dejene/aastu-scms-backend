@@ -30,14 +30,14 @@ public class Server {
 
         server.createContext("/", new HelloHandler());
         
+        server.createContext("/api/clearance", new ClearanceRoute());
         server.createContext("/api/auth", new AuthRoute());
         server.createContext("/api/student", new StudentRoute());
         server.createContext("/api/account", new AccountRoute());
-        server.createContext("/api/clearance", new ClearanceRoute());
 
         server.start();
         System.out.println("Server is listening on port " + PORT);
-        System.out.println("[http://localhost:1492/]");
+        System.out.println("[http://" + HOSTNAME + ":" + PORT + "]");
     }
 
     // Landing page handler

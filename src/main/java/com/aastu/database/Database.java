@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 import com.aastu.model.ClearanceApplication;
 import com.aastu.model.Status;
@@ -84,13 +85,18 @@ public class Database {
       prprdStmt.setString(2, application.getReason());
       prprdStmt.setString(3, application.getStatus().toString());
 
-      int appNumber = prprdStmt.executeUpdate();
+      prprdStmt.executeUpdate();
 
+      // Retrieve the generated keys
+      ResultSet generatedKeys = prprdStmt.getGeneratedKeys();
+      int generatedId = 0;
+      if (generatedKeys.next()) generatedId = generatedKeys.getInt(1);
+      
       prprdStmt.clearParameters();
       prprdStmt.close();
       conn.close();
 
-      return appNumber;
+      return generatedId;
     } catch (SQLException e) {
       throw e;
     }
@@ -141,6 +147,22 @@ public class Database {
     }
   }
 
+  public static String getApplicantId(int applicationNumber) throws SQLException {
+    try (Connection conn = DriverManager.getConnection(driver)) {
+      PreparedStatement prprdStmt = conn
+          .prepareStatement("SELECT studentId FROM ClearanceApplication WHERE applicationId = ?");
+      prprdStmt.setInt(1, applicationNumber);
+      ResultSet result = prprdStmt.executeQuery();
+
+      while (result.next()) {
+        return result.getString("studentId");
+      }
+      return null;
+    } catch (SQLException e) {
+      throw e;
+    }
+  }
+  
   public static void updateStatus(int appNumber, Status newStatus) throws SQLException {
     try (Connection conn = DriverManager.getConnection(driver)) {
       PreparedStatement prprdStmt = conn
@@ -172,6 +194,47 @@ public class Database {
     }
   }
 
+  private static ArrayList<ClearanceApplication> getApplications(String query) {
+    try (Connection conn = DriverManager.getConnection(driver)) {
+      Statement stmt = conn.createStatement();
+      ResultSet result = stmt.executeQuery(query);
+
+      var clearanceList = new ArrayList<ClearanceApplication>();
+      while (result.next()) {
+        String studid = result.getString("studentId");
+        String reason = result.getString("reason");
+        Status status = Status.fromString(result.getString("applicationStatus"));
+        clearanceList.add(new ClearanceApplication(studid, reason, status));
+      }
+
+      stmt.close();
+      conn.close();
+      return clearanceList;
+    } catch (Exception e) {
+      System.out.println(e.getMessage());
+      return null;
+    }
+  }
+
+  public static ArrayList<ClearanceApplication> getPendingApplications() {
+    String query = "SELECT studentId, reason, applicationStatus FROM clearanceapplication";
+    return Database.getApplications(query);
+  }
+
+  public static ArrayList<ClearanceApplication> getPendingApplications(String userId) {
+    String query = "SELECT studentId, reason, applicationStatus FROM clearanceapplication WHERE applicationStatus = \"PENDING\" AND studentId = " + "\""
+        + userId + "\"";
+    return Database.getApplications(query);
+  }
+  
   public static void main(String[] args) {
+    var list = Database.getPendingApplications("ETS1518/14");
+    if (list == null) {
+      System.out.println("No pending application");
+    } else {
+      for (var app : list) {
+        System.out.println("-- app - " + app.getStatus().equals(Status.PENDING));
+      }
+    }
   }
 }

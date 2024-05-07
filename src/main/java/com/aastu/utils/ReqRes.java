@@ -1,6 +1,7 @@
 package com.aastu.utils;
 
 import com.google.gson.Gson;
+import com.sun.net.httpserver.HttpExchange;
 
 import java.io.InputStream;
 import java.io.BufferedReader;
@@ -37,4 +38,12 @@ public class ReqRes {
 
     return requestBody.toString();
   }
+
+  public static void sendResponse(HttpExchange exchange, int statusCode, String jsonBody) throws IOException {
+    exchange.sendResponseHeaders(statusCode, jsonBody.getBytes().length);
+    exchange.getResponseHeaders().set("Content-Type", "application/json");
+    exchange.getResponseBody().write(jsonBody.getBytes());
+    exchange.getResponseBody().close();
+  }
+
 }
