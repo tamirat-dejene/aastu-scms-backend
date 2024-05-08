@@ -24,7 +24,7 @@ To contribute, please follow these steps:
 1. Fork the repository by clicking the 'Fork' button on the top-right corner of this page.
 2. Clone the forked repository to your local machine:
     ```bash
-    git clone (https://github.com/tamirat-dejene/aastu-scms-backend.git)
+    git clone https://github.com/tamirat-dejene/aastu-scms-backend.git
     ```
 3. Create a new branch to work on:
     ```bash
