@@ -2,7 +2,7 @@
 Advanced Programming final project
 
 ## contributors 
-    - [tamirat](https://github.com/tamirat-dejene/)
+[tamirat](https://github.com/tamirat-dejene)
 ## Table of Contents
 
 - [Installation](#installation)
