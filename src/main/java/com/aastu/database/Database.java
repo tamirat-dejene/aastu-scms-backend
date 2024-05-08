@@ -227,7 +227,7 @@ public class Database {
   }
   
   public static void main(String[] args) {
-    var list = Database.getPendingApplications("ETS1518/14");
+    var list = Database.getPendingApplications();
     if (list == null) {
       System.out.println("No pending application");
     } else {

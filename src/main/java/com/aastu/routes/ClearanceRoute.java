@@ -16,7 +16,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 public class ClearanceRoute implements HttpHandler {
-
   @Override
   public void handle(HttpExchange exchange) throws IOException {
     // Get reuest method
@@ -27,7 +26,7 @@ public class ClearanceRoute implements HttpHandler {
         hanleClearancePost(exchange);
         break;
       case "GET":
-        hanleClearacenGet(exchange);
+        hanleClearanceGet(exchange);
     }
   }
 
@@ -37,15 +36,15 @@ public class ClearanceRoute implements HttpHandler {
 
     // Authenticate the request using the auth token inside the header;
     String authToken = exchange.getRequestHeaders().getFirst("Authorization");
-    authToken = authToken.split(" ")[1]; // To separate the bearer key word
-    if (!Util.verifyUser(authToken)) {
+    String[] auth = authToken == null ? null : authToken.split(" "); // To separate the bearer key word
+    if (auth == null || auth.length <= 1 || !Util.verifyUser(auth[1])) {
       message.setMessage("Unauthorized");
       ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_UNAUTHORIZED, ReqRes.makeJsonString(message));
       return;
     }
 
     // Authenticated. Then, get the payload from jwt token
-    String payload = Util.getDecodedPayload(authToken);
+    String payload = Util.getDecodedPayload(auth[1]);
 
     // Since the payload contains the login info meaning username and password
     Login login = (Login) ReqRes.makeModelFromJson(payload, Login.class);
@@ -93,7 +92,7 @@ public class ClearanceRoute implements HttpHandler {
     }
   }
 
-  public static void hanleClearacenGet(HttpExchange exchange) throws IOException {
+  public static void hanleClearanceGet(HttpExchange exchange) throws IOException {
     Message message = new Message();
 
     // Read the application id from the url
@@ -103,15 +102,15 @@ public class ClearanceRoute implements HttpHandler {
 
     // Authenticate the request using the auth token inside the header;
     String authToken = exchange.getRequestHeaders().getFirst("Authorization");
-    authToken = authToken.split(" ")[1]; // To separate the bearer key word
-    if (!Util.verifyUser(authToken)) {
+    String[] auth = authToken == null ? null : authToken.split(" "); // To separate the bearer key word
+    if (auth == null || auth.length <= 1 || !Util.verifyUser(auth[1])) {
       message.setMessage("Unauthorized");
       ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_UNAUTHORIZED, ReqRes.makeJsonString(message));
       return;
     }
 
     // Authenticated. Then, get the payload from jwt token
-    String payload = Util.getDecodedPayload(authToken);
+    String payload = Util.getDecodedPayload(auth[1]);
     // Since the payload contains the login info meaning username and password
     Login login = (Login) ReqRes.makeModelFromJson(payload, Login.class);
 
