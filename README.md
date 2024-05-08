@@ -1,8 +1,8 @@
 # AASTU Student Clearance Management System - Backend
-    - Advanced Programming final project
-    - The project simplifies and automate the clearance process, reducing administrative burden and improving transparency for students at Addis Ababa Science and Technology University.
+Advanced Programming final project
+
 ## contributors 
-    - []()
+    - [tamirat](https://github.com/tamirat-dejene/)
 ## Table of Contents
 
 - [Installation](#installation)
