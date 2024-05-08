@@ -3,6 +3,12 @@ Advanced Programming final project
 
 ## contributors 
 [tamirat](https://github.com/tamirat-dejene)
+[tadiyos](https://github.com)
+[surafel](https://github.com)
+[tamirat](https://github.com)
+[tebarek](https://github.com)
+[solomon](https://github.com)
+
 ## Table of Contents
 
 - [Installation](#installation)
