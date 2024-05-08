@@ -1,8 +1,6 @@
 # AASTU Student Clearance Management System - Backend
 This project simplifies and automate the clearance process, reducing administrative burden and improving transparency for students. It can also help identify bottlenecks and enhance the overall efficiency of the clearance process. 
 
-
-
 ## Table of Contents
 
 - [Installation](#installation)
@@ -39,6 +37,6 @@ To contribute:
     git push origin your-branch-name
     ```
 
-7. Create a Pull Request (PR) by visiting ```bash https://github.com/tamirat-dejene/aastu-scms-backend.git```
+7. Create a Pull Request (PR) by visiting [https://github.com/tamirat-dejene/aastu-scms-backend.git](https://github.com/tamirat-dejene/aastu-scms-backend.git)
 
 8. Once the PR is created, it will be reviewed.
