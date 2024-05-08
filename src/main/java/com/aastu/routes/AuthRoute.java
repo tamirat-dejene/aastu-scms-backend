@@ -16,7 +16,6 @@ import com.aastu.utils.Validate;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-
 public class AuthRoute implements HttpHandler {
   @Override
   public void handle(HttpExchange exchange) throws IOException {
@@ -56,15 +55,15 @@ public class AuthRoute implements HttpHandler {
       return;
     }
     // Separate the Bearer from the token i.e. Authorization = Bearer token
-    String token = authHeader.split(" ")[1];
+    String[] token = authHeader.split(" ");
 
     // We will validate using the token sent inside the header
-    if (Util.verifyUser(token))
-      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_OK, "{\"Authenticated\": \"true\"}");
-    else
+    if (token.length <= 1 || !Util.verifyUser(token[1]))
       ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_UNAUTHORIZED, "{ \"Authenticated\": \"false\"}");
+    else
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_OK, "{\"Authenticated\": \"true\"}");
   }
-  
+
   private static void handleLoginPostRequest(HttpExchange exchange) throws IOException {
     // Reading Json data from the request body
     String requestBody = ReqRes.readRequestBody(exchange.getRequestBody());
@@ -108,7 +107,7 @@ public class AuthRoute implements HttpHandler {
     exchange.getResponseHeaders().set("Authorization", "Bearer " + jwt);
     ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_OK, "{\"Authenticated\": \"true\"}");
   }
-  
+
   private static void handleSignUp(HttpExchange exchange) throws IOException {
     // Request body
     String requestBody = ReqRes.readRequestBody(exchange.getRequestBody());

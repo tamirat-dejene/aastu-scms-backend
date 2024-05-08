@@ -18,8 +18,7 @@ public class Database {
   private static String driver = Util.getEnv().getProperty("JDBC_DRIVER");
 
   public static void saveStudent(Student newStudent, String password) throws SQLException {
-    String url = Util.getEnv().getProperty("JDBC_DRIVER");
-    try (Connection conn = DriverManager.getConnection(url)) {
+    try (Connection conn = DriverManager.getConnection(driver)) {
       PreparedStatement prprdstmt = conn
           .prepareStatement(
               "INSERT INTO Student(studentID, firstName, middleName, lastName, emailAddress, section, classYear, college, department, degree, admissionType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");

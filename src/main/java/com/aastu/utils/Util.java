@@ -1,6 +1,5 @@
 package com.aastu.utils;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
@@ -22,11 +21,25 @@ import com.auth0.jwt.interfaces.JWTVerifier;
 
 public class Util {
   public static Properties getEnv() {
+    // Properties properties = new Properties();
+    // try (InputStream input = new FileInputStream("http-server/src/main/resources/config.properties")) {
+    //   properties.load(input);
+    //   return properties;
+    // } catch (IOException e) {
+    //   return null;
+    // }
+
     Properties properties = new Properties();
-    try (InputStream input = new FileInputStream("http-server/src/main/resources/config.properties")) {
-      properties.load(input);
-      return properties;
+    try (InputStream input = ClassLoader.getSystemResourceAsStream("config.properties")) {
+      if (input != null) {
+        properties.load(input);
+        return properties;
+      } else {
+        System.err.println("Unable to find config.properties file.");
+        return null;
+      }
     } catch (IOException e) {
+      e.printStackTrace();
       return null;
     }
   }
