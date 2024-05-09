@@ -5,6 +5,7 @@ import java.net.HttpURLConnection;
 import java.sql.SQLException;
 
 import com.aastu.database.Database;
+import com.aastu.model.IdNumberPayload;
 import com.aastu.model.Login;
 import com.aastu.model.Message;
 import com.aastu.model.SecurePassword;
@@ -100,7 +101,9 @@ public class AuthRoute implements HttpHandler {
       return;
     }
     // The user is authenticated: Sign the user with jwt
-    String payLoad = ReqRes.makeJsonString(login);
+    IdNumberPayload idNumber = new IdNumberPayload();
+    idNumber.setIdNumber(login.getIdNumber());
+    String payLoad = ReqRes.makeJsonString(idNumber);
     String jwt = Util.signUser(payLoad);
 
     exchange.getResponseHeaders().set("Authorization", "Bearer " + jwt);

@@ -5,7 +5,7 @@ import java.net.HttpURLConnection;
 import java.sql.SQLException;
 
 import com.aastu.database.Database;
-import com.aastu.model.Login;
+import com.aastu.model.IdNumberPayload;
 import com.aastu.model.Message;
 import com.aastu.model.SecurePassword;
 import com.aastu.model.UpdatePassword;
@@ -37,7 +37,6 @@ public class AccountRoute implements HttpHandler {
   }
 
   public static void handleChangePwd(HttpExchange exchange) throws IOException {
-    System.out.println(exchange.getRequestURI().toString());
     // Authenticate the request
     String authToken = exchange.getRequestHeaders().getFirst("Authorization");
     String token = (authToken == null || authToken.split(" ").length <= 1) ? null : authToken.split(" ")[1];
@@ -66,12 +65,10 @@ public class AccountRoute implements HttpHandler {
     // Check the old password against the stored password
 
     String loginJson = Util.getDecodedPayload(token);
-    Login login = (Login) ReqRes.makeModelFromJson(loginJson, Login.class);
+    IdNumberPayload idNumber = (IdNumberPayload) ReqRes.makeModelFromJson(loginJson, IdNumberPayload.class);
 
     try {
-      if (!login.getPassword().equals(update.getOldPassword())
-          || !SecurePassword.authenticatePassword(update.getOldPassword(),
-              Database.getUserPassword(login.getIdNumber()))) {
+      if (!SecurePassword.authenticatePassword(update.getOldPassword(), Database.getUserPassword(idNumber.getIdNumber()))) {
         message.setMessage("Wrong old password");
         ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, ReqRes.makeJsonString(message));
         return;
@@ -86,7 +83,7 @@ public class AccountRoute implements HttpHandler {
     // First we need to hash the new password
     SecurePassword passwd = SecurePassword.saltAndHashPassword(update.getNewPassword());
     try {
-      int r = Database.updatePassword(login.getIdNumber(), passwd.getHashedPassword());
+      int r = Database.updatePassword(idNumber.getIdNumber(), passwd.getHashedPassword());
       if (r > 0) {
         message.setMessage("Operaton Sccessfull!");
         ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_ACCEPTED, ReqRes.makeJsonString(message));

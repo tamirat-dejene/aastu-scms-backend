@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import com.aastu.database.Database;
 import com.aastu.model.ClearanceApplication;
 import com.aastu.model.ClearanceReason;
-import com.aastu.model.Login;
+import com.aastu.model.IdNumberPayload;
 import com.aastu.model.Message;
 import com.aastu.model.Status;
 import com.aastu.utils.ReqRes;
@@ -47,8 +47,8 @@ public class ClearanceRoute implements HttpHandler {
     String payload = Util.getDecodedPayload(auth[1]);
 
     // Since the payload contains the login info meaning username and password
-    Login login = (Login) ReqRes.makeModelFromJson(payload, Login.class);
-    String userId = login.getIdNumber();
+    IdNumberPayload idNumber = (IdNumberPayload) ReqRes.makeModelFromJson(payload, IdNumberPayload.class);
+    String userId = idNumber.getIdNumber();
 
     // And lets read the clearance reason from the request body
     String clearanceString = ReqRes.readRequestBody(exchange.getRequestBody());
@@ -111,8 +111,8 @@ public class ClearanceRoute implements HttpHandler {
 
     // Authenticated. Then, get the payload from jwt token
     String payload = Util.getDecodedPayload(auth[1]);
-    // Since the payload contains the login info meaning username and password
-    Login login = (Login) ReqRes.makeModelFromJson(payload, Login.class);
+    // Since the payload contains the id info meaning username
+    IdNumberPayload idNumber = (IdNumberPayload) ReqRes.makeModelFromJson(payload, IdNumberPayload.class);
 
     try {
       String applicantId = Database.getApplicantId(Integer.parseInt(uniqueId));
@@ -121,7 +121,7 @@ public class ClearanceRoute implements HttpHandler {
         ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, ReqRes.makeJsonString(message));
         return;
       } else {
-        if (!applicantId.equals(login.getIdNumber())) {
+        if (!applicantId.equals(idNumber.getIdNumber())) {
           message.setMessage("You can only check your app status");
           ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, ReqRes.makeJsonString(message));
           return;
