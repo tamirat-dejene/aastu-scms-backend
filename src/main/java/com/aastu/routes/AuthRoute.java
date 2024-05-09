@@ -20,7 +20,6 @@ public class AuthRoute implements HttpHandler {
   @Override
   public void handle(HttpExchange exchange) throws IOException {
     String url = exchange.getRequestURI().getPath();
-    System.out.println(url);
     switch (url) {
       case "/api/auth/login":
         handleLogin(exchange);

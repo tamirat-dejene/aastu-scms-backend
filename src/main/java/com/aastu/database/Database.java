@@ -193,6 +193,17 @@ public class Database {
     }
   }
 
+  public static int updatePassword(String userId, String hashedPwd) throws SQLException {
+    try (Connection conn = DriverManager.getConnection(driver)) {
+      var prprdStmt = conn.prepareStatement("UPDATE studentaccount SET userPassword = ? WHERE studentId = ?");
+      prprdStmt.setString(1, hashedPwd);
+      prprdStmt.setString(2, userId);
+      return prprdStmt.executeUpdate();
+    } catch (SQLException e) {
+      throw e;
+    }
+  }
+
   private static ArrayList<ClearanceApplication> getApplications(String query) {
     try (Connection conn = DriverManager.getConnection(driver)) {
       Statement stmt = conn.createStatement();
@@ -221,7 +232,8 @@ public class Database {
   }
 
   public static ArrayList<ClearanceApplication> getPendingApplications(String userId) {
-    String query = "SELECT studentId, reason, applicationStatus FROM clearanceapplication WHERE applicationStatus = \"PENDING\" AND studentId = " + "\""
+    String query = "SELECT studentId, reason, applicationStatus FROM clearanceapplication WHERE applicationStatus = \"PENDING\" AND studentId = "
+        + "\""
         + userId + "\"";
     return Database.getApplications(query);
   }
