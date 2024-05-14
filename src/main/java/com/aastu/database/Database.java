@@ -162,6 +162,22 @@ public class Database {
     }
   }
   
+  public static String getUserEmail(String idNumber) throws SQLException {
+    try (Connection conn = DriverManager.getConnection(driver)) {
+      PreparedStatement prprdStmt = conn
+          .prepareStatement("SELECT emailAddress FROM student WHERE studentID = ?");
+      prprdStmt.setString(1, idNumber);
+      ResultSet result = prprdStmt.executeQuery();
+
+      while (result.next()) {
+        return result.getString("emailAddress");
+      }
+      return null;
+    } catch (SQLException e) {
+      throw e;
+    }
+  }
+  
   public static void updateStatus(int appNumber, Status newStatus) throws SQLException {
     try (Connection conn = DriverManager.getConnection(driver)) {
       PreparedStatement prprdStmt = conn

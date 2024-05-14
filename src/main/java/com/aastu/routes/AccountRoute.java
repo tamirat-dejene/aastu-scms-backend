@@ -26,6 +26,9 @@ public class AccountRoute implements HttpHandler {
           case "/api/account/updatepw":
             handleChangePwd(exchange);
             break;
+          case "/api/account/resetpw":
+            handleResetPwd(exchange);
+            break;
           default:
             break;
         }
@@ -36,7 +39,41 @@ public class AccountRoute implements HttpHandler {
     }
   }
 
-  public static void handleChangePwd(HttpExchange exchange) throws IOException {
+  private static void handleResetPwd(HttpExchange exchange) throws IOException {
+    Message message = new Message();
+
+    String emailjson = ReqRes.readRequestBody(exchange.getRequestBody());
+    message = (Message) ReqRes.makeModelFromJson(emailjson, Message.class);
+    
+    String email = message.getMessage();
+    String idNumber = exchange.getRequestHeaders().getFirst("Authorization");
+
+    if (idNumber == null || email == null) {
+      message.setMessage("Not valid idnumber/email");
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, ReqRes.makeJsonString(message));
+      return;
+    }
+
+    // Check if the email and id provided matches in the database
+    try {
+      String storedEmail = Database.getUserEmail(idNumber);
+      if (storedEmail == null || !storedEmail.equals(email)) {
+        message.setMessage("Email and id number doesn't match");
+        ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, ReqRes.makeJsonString(message));
+        return;
+      }
+    } catch (SQLException e) {
+      message.setMessage("Internal/Server error! Retry later.");
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_INTERNAL_ERROR, ReqRes.makeJsonString(message));
+      return;
+    }
+
+    // Send Otp to the user's email
+    message.setMessage("Accepted the request!");
+    ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_ACCEPTED, ReqRes.makeJsonString(message));
+  }
+
+  private static void handleChangePwd(HttpExchange exchange) throws IOException {
     // Authenticate the request
     String authToken = exchange.getRequestHeaders().getFirst("Authorization");
     String token = (authToken == null || authToken.split(" ").length <= 1) ? null : authToken.split(" ")[1];
