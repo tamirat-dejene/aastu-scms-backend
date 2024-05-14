@@ -2,7 +2,10 @@ package com.aastu.routes;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.security.GeneralSecurityException;
 import java.sql.SQLException;
+
+import javax.mail.MessagingException;
 
 import com.aastu.database.Database;
 import com.aastu.model.IdNumberPayload;
@@ -12,6 +15,7 @@ import com.aastu.model.UpdatePassword;
 import com.aastu.utils.ReqRes;
 import com.aastu.utils.Util;
 import com.aastu.utils.Validate;
+import com.aastu.utils.gmailapi.SendEmail;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
@@ -45,10 +49,10 @@ public class AccountRoute implements HttpHandler {
     String emailjson = ReqRes.readRequestBody(exchange.getRequestBody());
     message = (Message) ReqRes.makeModelFromJson(emailjson, Message.class);
     
-    String email = message.getMessage();
+    String emailId = message.getMessage();
     String idNumber = exchange.getRequestHeaders().getFirst("Authorization");
 
-    if (idNumber == null || email == null) {
+    if (idNumber == null || emailId == null) {
       message.setMessage("Not valid idnumber/email");
       ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, ReqRes.makeJsonString(message));
       return;
@@ -57,7 +61,7 @@ public class AccountRoute implements HttpHandler {
     // Check if the email and id provided matches in the database
     try {
       String storedEmail = Database.getUserEmail(idNumber);
-      if (storedEmail == null || !storedEmail.equals(email)) {
+      if (storedEmail == null || !storedEmail.equals(emailId)) {
         message.setMessage("Email and id number doesn't match");
         ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, ReqRes.makeJsonString(message));
         return;
@@ -69,8 +73,19 @@ public class AccountRoute implements HttpHandler {
     }
 
     // Send Otp to the user's email
-    message.setMessage("Accepted the request!");
-    ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_ACCEPTED, ReqRes.makeJsonString(message));
+    String OTP = Util.generateOTP();
+    try {
+      var emailMessage = SendEmail.createEmailAsMessage(emailId, Util.getEnv().getProperty("email.id"),
+          "One Time Password", "Your one time password " + OTP);
+      SendEmail.sendEmail(emailMessage);
+
+      message.setMessage("Success");
+
+    } catch (MessagingException | IOException | GeneralSecurityException e) {
+      System.out.println(e.getMessage());
+    }
+
+    ReqRes.sendResponse(exchange, 202, ReqRes.makeJsonString(message));
   }
 
   private static void handleChangePwd(HttpExchange exchange) throws IOException {

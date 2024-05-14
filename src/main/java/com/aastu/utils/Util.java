@@ -7,6 +7,7 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Properties;
+import java.util.Random;
 import java.util.UUID;
 
 import org.apache.commons.codec.binary.Hex;
@@ -22,11 +23,12 @@ import com.auth0.jwt.interfaces.JWTVerifier;
 public class Util {
   public static Properties getEnv() {
     // Properties properties = new Properties();
-    // try (InputStream input = new FileInputStream("http-server/src/main/resources/config.properties")) {
-    //   properties.load(input);
-    //   return properties;
+    // try (InputStream input = new
+    // FileInputStream("http-server/src/main/resources/config.properties")) {
+    // properties.load(input);
+    // return properties;
     // } catch (IOException e) {
-    //   return null;
+    // return null;
     // }
 
     Properties properties = new Properties();
@@ -96,12 +98,23 @@ public class Util {
     UUID uuid = UUID.fromString("00000000-0000-0000-0000-000000000000");
     return UUID.nameUUIDFromBytes((uuid.toString() + name).getBytes());
   }
+ 
+  public static String generateOTP() {
+    String NUMBERS = "0123456789";
+    int OTP_LENGTH = 6;
+    Random random = new Random();
+    StringBuilder otp = new StringBuilder(OTP_LENGTH);
+    for (int i = 0; i < OTP_LENGTH; i++)
+      otp.append(NUMBERS.charAt(random.nextInt(NUMBERS.length())));
+    
+    return otp.toString();
+  }
 
   public static void main(String[] args) {
     var login = new Login();
     login.setIdNumber("ETS1518/14");
     login.setPassword("abcdef");
-    
+
     String token = Util.signUser(ReqRes.makeJsonString(login));
 
     System.out.println(Util.getDecodedPayload(token));
@@ -111,6 +124,8 @@ public class Util {
     String base64Id = Base64.getEncoder().encodeToString(id.toString().getBytes());
     System.out.println(base64Id);
     System.out.println(Base64.getDecoder().decode(base64Id));
+
+    System.out.println(generateOTP());
   }
 
 }

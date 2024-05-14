@@ -50,3 +50,5 @@ dependency-reduced-pom.xml
 *.properties
 
 src/main/resources/config.properties
+src/main/resources/credentials/
+src/main/resources/storedcredentials/
