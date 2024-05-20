@@ -27,23 +27,30 @@ public class ReqRes {
     }
   }
 
-  public static String readRequestBody(InputStream requestBodyStream) throws IOException {
+  public static String readRequestBody(InputStream requestBodyStream) {
     BufferedReader reader = new BufferedReader(
         new InputStreamReader(requestBodyStream, StandardCharsets.UTF_8));
     StringBuilder requestBody = new StringBuilder();
     String line;
-    while ((line = reader.readLine()) != null)
-      requestBody.append(line);
-    reader.close();
-
+    try {
+      while ((line = reader.readLine()) != null)
+        requestBody.append(line);
+      reader.close();
+    } catch (IOException e) {
+      System.out.println(e.getMessage());
+    }
     return requestBody.toString();
   }
 
-  public static void sendResponse(HttpExchange exchange, int statusCode, String jsonBody) throws IOException {
-    exchange.sendResponseHeaders(statusCode, jsonBody.getBytes().length);
-    exchange.getResponseHeaders().set("Content-Type", "application/json");
-    exchange.getResponseBody().write(jsonBody.getBytes());
-    exchange.getResponseBody().close();
+  public static void sendResponse(HttpExchange exchange, int statusCode, String jsonBody) {
+    try {
+      exchange.sendResponseHeaders(statusCode, jsonBody.getBytes().length);
+      exchange.getResponseHeaders().set("Content-Type", "application/json");
+      exchange.getResponseBody().write(jsonBody.getBytes());
+      exchange.getResponseBody().close();
+    } catch (IOException e) {
+      System.out.println(e.getMessage());
+    }
   }
 
 }

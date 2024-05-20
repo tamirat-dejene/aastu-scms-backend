@@ -16,26 +16,32 @@ import com.aastu.utils.ReqRes;
 import com.aastu.utils.Util;
 import com.aastu.utils.Validate;
 import com.aastu.utils.gmailapi.SendEmail;
+
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 public class AccountRoute implements HttpHandler {
+  private static String OTP = null;
+  private static String userId = null;
 
   @Override
-  public void handle(HttpExchange exchange) throws IOException {
+  public void handle(HttpExchange exchange) {
+    String url = exchange.getRequestURI().getPath();
     switch (exchange.getRequestMethod()) {
       case "PUT":
-        String url = exchange.getRequestURI().getPath();
         switch (url) {
-          case "/api/account/updatepw":
-            handleChangePwd(exchange);
+          case "/api/account/updatepw": handleChangePwd(exchange);
             break;
-          case "/api/account/resetpw":
-            handleResetPwd(exchange);
+          case "/api/account/resetpw": handleResetPwd(exchange);
             break;
           default:
             break;
         }
+        break;
+      case "GET":
+        String query = exchange.getRequestURI().getQuery();
+        if (query != null && query.contains("otp=")) handleOTPGet(exchange);
+        if (query != null && query.contains("newpwd=")) handleSaveNewPwd(exchange);
         break;
 
       default:
@@ -43,17 +49,46 @@ public class AccountRoute implements HttpHandler {
     }
   }
 
-  private static void handleResetPwd(HttpExchange exchange) throws IOException {
+  private void handleSaveNewPwd(HttpExchange exchange) {
+    String json = exchange.getRequestURI().getQuery().split("=")[1];
+    SecurePassword securePassword = (SecurePassword) ReqRes.makeModelFromJson(json, SecurePassword.class);
+
+    Message message = new Message();
+    try {
+      Database.updatePassword(userId, securePassword.getHashedPassword());
+      message.setMessage("Password reset successfully");
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_RESET, ReqRes.makeJsonString(message));
+      return;
+    } catch (SQLException e) {
+      message.setMessage("Internal error. Try again later.");
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_INTERNAL_ERROR, ReqRes.makeJsonString(message));
+    }
+  }
+
+  private static void handleOTPGet(HttpExchange exchange) {
+    String inputOTP = exchange.getRequestURI().getQuery().split("=")[1];
+
+    Message message = new Message();
+    if (inputOTP.equals(OTP)) {
+      message.setMessage("Correct OPT");
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_ACCEPTED, ReqRes.makeJsonString(message));
+    } else {
+      message.setMessage("Incorrect OTP");
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_CONFLICT, ReqRes.makeJsonString(message));
+    }
+  }
+
+  private static void handleResetPwd(HttpExchange exchange) {
     Message message = new Message();
 
     String emailjson = ReqRes.readRequestBody(exchange.getRequestBody());
     message = (Message) ReqRes.makeModelFromJson(emailjson, Message.class);
-    
+
     String emailId = message.getMessage();
     String idNumber = exchange.getRequestHeaders().getFirst("Authorization");
 
     if (idNumber == null || emailId == null) {
-      message.setMessage("Not valid idnumber/email");
+      message.setMessage("Invalid idnumber/email");
       ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, ReqRes.makeJsonString(message));
       return;
     }
@@ -73,14 +108,15 @@ public class AccountRoute implements HttpHandler {
     }
 
     // Send Otp to the user's email
-    String OTP = Util.generateOTP();
+    String otp = Util.generateOTP();
+    OTP = otp;
+    userId = idNumber;
     try {
       var emailMessage = SendEmail.createEmailAsMessage(emailId, Util.getEnv().getProperty("email.id"),
-          "One Time Password", "Your one time password " + OTP);
+          "One Time Password", "Your one time password: " + otp);
       SendEmail.sendEmail(emailMessage);
 
       message.setMessage("Success");
-
     } catch (MessagingException | IOException | GeneralSecurityException e) {
       System.out.println(e.getMessage());
     }
@@ -88,7 +124,7 @@ public class AccountRoute implements HttpHandler {
     ReqRes.sendResponse(exchange, 202, ReqRes.makeJsonString(message));
   }
 
-  private static void handleChangePwd(HttpExchange exchange) throws IOException {
+  private static void handleChangePwd(HttpExchange exchange) {
     // Authenticate the request
     String authToken = exchange.getRequestHeaders().getFirst("Authorization");
     String token = (authToken == null || authToken.split(" ").length <= 1) ? null : authToken.split(" ")[1];
@@ -120,7 +156,8 @@ public class AccountRoute implements HttpHandler {
     IdNumberPayload idNumber = (IdNumberPayload) ReqRes.makeModelFromJson(loginJson, IdNumberPayload.class);
 
     try {
-      if (!SecurePassword.authenticatePassword(update.getOldPassword(), Database.getUserPassword(idNumber.getIdNumber()))) {
+      if (!SecurePassword.authenticatePassword(update.getOldPassword(),
+          Database.getUserPassword(idNumber.getIdNumber()))) {
         message.setMessage("Wrong old password");
         ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, ReqRes.makeJsonString(message));
         return;

@@ -254,14 +254,6 @@ public class Database {
     return Database.getApplications(query);
   }
   
-  public static void main(String[] args) {
-    var list = Database.getPendingApplications();
-    if (list == null) {
-      System.out.println("No pending application");
-    } else {
-      for (var app : list) {
-        System.out.println("-- app - " + app.getStatus().equals(Status.PENDING));
-      }
-    }
+  public static void main(String[] args) throws SQLException {
   }
 }

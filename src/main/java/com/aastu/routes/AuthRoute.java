@@ -1,6 +1,5 @@
 package com.aastu.routes;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.sql.SQLException;
 
@@ -19,7 +18,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 public class AuthRoute implements HttpHandler {
   @Override
-  public void handle(HttpExchange exchange) throws IOException {
+  public void handle(HttpExchange exchange) {
     String url = exchange.getRequestURI().getPath();
     switch (url) {
       case "/api/auth/login":
@@ -37,7 +36,7 @@ public class AuthRoute implements HttpHandler {
     }
   }
 
-  private static void handleLogin(HttpExchange exchange) throws IOException {
+  private static void handleLogin(HttpExchange exchange) {
     String method = exchange.getRequestMethod();
     switch (method) {
       case "GET":
@@ -48,7 +47,7 @@ public class AuthRoute implements HttpHandler {
     }
   }
 
-  private static void handleLoginGetRequest(HttpExchange exchange) throws IOException {
+  private static void handleLoginGetRequest(HttpExchange exchange) {
     String authHeader = exchange.getRequestHeaders().getFirst("Authorization");
     if (authHeader == null) {
       ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, "{ \"Authenticated\": \"false\"}");
@@ -64,7 +63,7 @@ public class AuthRoute implements HttpHandler {
       ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_OK, "{\"Authenticated\": \"true\"}");
   }
 
-  private static void handleLoginPostRequest(HttpExchange exchange) throws IOException {
+  private static void handleLoginPostRequest(HttpExchange exchange) {
     // Reading Json data from the request body
     String requestBody = ReqRes.readRequestBody(exchange.getRequestBody());
 
@@ -110,7 +109,7 @@ public class AuthRoute implements HttpHandler {
     ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_OK, "{\"Authenticated\": \"true\"}");
   }
 
-  private static void handleSignUp(HttpExchange exchange) throws IOException {
+  private static void handleSignUp(HttpExchange exchange) {
     // Request body
     String requestBody = ReqRes.readRequestBody(exchange.getRequestBody());
     Student student = (Student) ReqRes.makeModelFromJson(requestBody, Student.class);
@@ -119,8 +118,6 @@ public class AuthRoute implements HttpHandler {
     String passwordJson = exchange.getRequestHeaders().getFirst("Password");
     SecurePassword password = (SecurePassword) ReqRes.makeModelFromJson(passwordJson, SecurePassword.class);
     String hashedPassword = password.getHashedPassword();
-
-    System.out.println(requestBody);
 
     // Validating the user request inputs.
     try {
@@ -141,7 +138,6 @@ public class AuthRoute implements HttpHandler {
     // It has passed the validation: now save to database
     try {
       Database.saveStudent(student, hashedPassword);
-      System.out.println(hashedPassword);
     } catch (SQLException e) {
       var error = new Message();
       error.setMessage(e.getMessage());

@@ -44,7 +44,7 @@ public class Server {
     static class HelloHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            String response = "Hello, There! You have landed AASTU-SCMS developed by ad developer!";
+            String response = "Hello, There! You have landed AASTU-SCMS developed by AASTU Students!";
             exchange.sendResponseHeaders(200, response.getBytes().length);
             OutputStream os = exchange.getResponseBody();
             os.write(response.getBytes());
