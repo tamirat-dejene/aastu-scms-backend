@@ -7,6 +7,7 @@ import java.net.InetSocketAddress;
 import com.aastu.routes.AccountRoute;
 import com.aastu.routes.AuthRoute;
 import com.aastu.routes.ClearanceRoute;
+import com.aastu.routes.NotificationRoute;
 import com.aastu.routes.StudentRoute;
 import com.aastu.utils.Util;
 
@@ -18,7 +19,7 @@ public class Server {
     public static void main(String[] args) {
         try {
             Server.start();
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.out.println(e.getMessage());
         }
     }
@@ -34,6 +35,7 @@ public class Server {
         server.createContext("/api/auth", new AuthRoute());
         server.createContext("/api/student", new StudentRoute());
         server.createContext("/api/account", new AccountRoute());
+        server.createContext("/api/notification", new NotificationRoute());
 
         server.start();
         System.out.println("Server is listening on port " + PORT);

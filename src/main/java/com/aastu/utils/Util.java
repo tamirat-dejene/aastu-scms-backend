@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Properties;
@@ -106,10 +108,32 @@ public class Util {
     StringBuilder otp = new StringBuilder(OTP_LENGTH);
     for (int i = 0; i < OTP_LENGTH; i++)
       otp.append(NUMBERS.charAt(random.nextInt(NUMBERS.length())));
-    
+
     return otp.toString();
   }
 
+  public static String getDateString(Date date, String format) {
+    SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+    return dateFormat.format(date);
+  }
+
+  public static String getDateString() {
+    return getDateString(new Date(), "h:mm a, E, MMM dd, yyyy");
+  }
+
+  public static String getDateString(Date date) {
+    return getDateString(date, "h:mm a, E, MMM dd, yyyy");
+  }
+  
+  public static Date parseDateString(String date) {
+    SimpleDateFormat format = new SimpleDateFormat("h:mm a, E, MMM dd, yyyy");
+    try {
+      return format.parse(date);
+    } catch (ParseException e) {
+      System.out.println(e.getMessage());
+      return null;
+    }
+  }
   public static void main(String[] args) {
     var login = new Login();
     login.setIdNumber("ETS1518/14");
@@ -127,5 +151,7 @@ public class Util {
 
     System.out.println(generateOTP());
   }
+
+
 
 }

@@ -1,6 +1,7 @@
 package com.aastu.utils;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.InputStream;
@@ -12,13 +13,13 @@ import java.nio.charset.StandardCharsets;
 public class ReqRes {
 
   public static String makeJsonString(Object obj) {
-    Gson gson = new Gson();
+    Gson gson = new GsonBuilder().setDateFormat("h:mm a, E, MMM dd, yyyy").create();
     return gson.toJson(obj);
   }
 
   public static Object makeModelFromJson(String jsonString, java.lang.reflect.Type type) {
     try {
-      Gson gson = new Gson();
+      Gson gson = new GsonBuilder().setDateFormat("h:mm a, E, MMM dd, yyyy").create();
       return gson.fromJson(jsonString, type);
     } catch (Exception e) {
       System.out.println("Error");
@@ -53,4 +54,8 @@ public class ReqRes {
     }
   }
 
+
+  public static void main(String[] args) {
+    
+  }
 }
