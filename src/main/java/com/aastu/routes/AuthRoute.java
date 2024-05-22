@@ -1,7 +1,11 @@
 package com.aastu.routes;
 
+import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.security.GeneralSecurityException;
 import java.sql.SQLException;
+
+import javax.mail.MessagingException;
 
 import com.aastu.database.Database;
 import com.aastu.model.IdNumberPayload;
@@ -12,27 +16,76 @@ import com.aastu.model.Student;
 import com.aastu.utils.ReqRes;
 import com.aastu.utils.Util;
 import com.aastu.utils.Validate;
-
+import com.aastu.utils.gmailapi.SendEmail;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 public class AuthRoute implements HttpHandler {
+  private static String OTP = null;
+
   @Override
   public void handle(HttpExchange exchange) {
     String url = exchange.getRequestURI().getPath();
+    if (url.endsWith("/"))
+      url = url.substring(0, url.length() - 1);
     switch (url) {
       case "/api/auth/login":
         handleLogin(exchange);
         break;
       case "/api/auth/signup":
-        handleSignUp(exchange);
+        switch (exchange.getRequestMethod()) {
+          case "POST":
+            handleSignUp(exchange);
+            break;
+          case "GET":
+            if (exchange.getRequestURI().getQuery().contains("otp="))
+              handleOTP(exchange);
+            else if (exchange.getRequestURI().getQuery().contains("emailid="))
+              handleEmail(exchange);
+            break;
+          default:
+            break;
+        }
         break;
       case "/api/auth/logout":
         handLogout(exchange);
         break;
       default:
         ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, "{\"message\": \"Bad Request\"}");
+        System.out.println("Bad request.............");
         break;
+    }
+  }
+
+  private void handleEmail(HttpExchange exchange) {
+    // Try to send otp
+    OTP = Util.generateOTP();
+    Message message = new Message();
+    try {
+      String emailId = exchange.getRequestURI().getQuery().split("=")[1];
+      System.out.println(emailId);
+      var emailMessage = SendEmail.createEmailAsMessage(emailId, Util.getEnv().getProperty("email.id"),
+          "One Time Password", "Your one time password: " + OTP);
+      SendEmail.sendEmail(emailMessage);
+
+      message.setMessage("Success");
+      ReqRes.sendResponse(exchange, 200, ReqRes.makeJsonString(message));
+    } catch (MessagingException | IOException | GeneralSecurityException e) {
+      System.out.println(e.getMessage());
+      message.setMessage(e.getMessage());
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, ReqRes.makeJsonString(message));
+    }
+  }
+
+  private static void handleOTP(HttpExchange exchange) {
+    String otp = exchange.getRequestURI().getQuery().split("=")[1];
+    Message message = new Message();
+    if (otp.equals(OTP)) {
+      message.setMessage("Request Accepted");
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_ACCEPTED, ReqRes.makeJsonString(message));
+    } else {
+      message.setMessage("Incorrect otp");
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_CONFLICT, ReqRes.makeJsonString(message));
     }
   }
 
@@ -155,5 +208,6 @@ public class AuthRoute implements HttpHandler {
   }
 
   public static void main(String[] args) {
+    System.out.println("abcd".substring(0, 4));
   }
 }

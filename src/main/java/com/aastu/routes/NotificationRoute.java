@@ -2,7 +2,11 @@ package com.aastu.routes;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.sql.SQLException;
+import java.util.ArrayList;
 
+import com.aastu.database.Database;
+import com.aastu.model.IdNumberPayload;
 import com.aastu.model.Message;
 import com.aastu.model.Notification;
 import com.aastu.utils.ReqRes;
@@ -39,20 +43,19 @@ public class NotificationRoute implements HttpHandler {
       return;
     }
 
-    // Send notification if there is any new
-    boolean thereIsNewNotification = true;
-    Notification notification = null;
-    if (thereIsNewNotification)
-      notification = new Notification("Application status", "You application has been declined", Util.getDateString());
+    // Get user id from the payload
+    String payload = Util.getDecodedPayload(token[1]);
+    IdNumberPayload id = (IdNumberPayload) ReqRes.makeModelFromJson(payload, IdNumberPayload.class);
 
-    if (notification != null) {
-      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_ACCEPTED, ReqRes.makeJsonString(notification));
-    } else {
+    try {
+      ArrayList<Notification> notifications = Database.getNotificationsByStudentId(id.getIdNumber());
+      String jsonArray = ReqRes.makeJsonString(notifications);
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_ACCEPTED, jsonArray);
+    } catch (SQLException e) {
       Message message = new Message();
-      message.setMessage("No new notification");
-      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_NOT_MODIFIED, ReqRes.makeJsonString(message));
+      message.setMessage("Unable to fetch notifications");
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_INTERNAL_ERROR, ReqRes.makeJsonString(message));
     }
-
   }
 
 }

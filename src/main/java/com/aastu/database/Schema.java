@@ -97,6 +97,19 @@ public class Schema {
       statement.executeUpdate(createClearanceApplicationTable);
       System.out.println("ClearanceApplication table created successfully.");
     }
+
+    try (Statement statement = connection.createStatement()) {
+      String createNotificationTable = "CREATE TABLE Notification (" +
+          "notificationId INTEGER PRIMARY KEY, " +
+          "studentId VARCHAR(15), " +
+          "notificationTitle VARCHAR(100), " +
+          "notificationMessage VARCHAR(400) " +
+          "notificationDate VARCHAR(50), " +
+          "FOREIGN KEY Notification(studentId) REFERENCES Student(StudentId) ON DELETE CASCADE " +
+          ")";
+      statement.executeUpdate(createNotificationTable);
+      System.out.println("Notification table created successfully.");
+    }
   }
 
   static void dropSchema() throws SQLException {

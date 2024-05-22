@@ -9,6 +9,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 
 import com.aastu.model.ClearanceApplication;
+import com.aastu.model.Notification;
 import com.aastu.model.Status;
 import com.aastu.model.Student;
 import com.aastu.utils.Util;
@@ -36,6 +37,8 @@ public class Database {
 
       prprdstmt.executeUpdate();
       createStudentAccount(newStudent.getIdNumber(), password);
+      createNotification(newStudent.getIdNumber(), new Notification("Successfully Signedup",
+          "You have successfully signed up with student id, " + newStudent.getIdNumber(), Util.getDateString()));
       prprdstmt.close();
       conn.close();
     } catch (SQLException e) {
@@ -89,12 +92,15 @@ public class Database {
       // Retrieve the generated keys
       ResultSet generatedKeys = prprdStmt.getGeneratedKeys();
       int generatedId = 0;
-      if (generatedKeys.next()) generatedId = generatedKeys.getInt(1);
-      
+      if (generatedKeys.next())
+        generatedId = generatedKeys.getInt(1);
+
       prprdStmt.clearParameters();
       prprdStmt.close();
       conn.close();
 
+      createNotification(application.getStudentId(), new Notification("Application submitted",
+          "You have successfully submitted new clearance application with app#, AASTUSCMS-" + generatedId, Util.getDateString()));
       return generatedId;
     } catch (SQLException e) {
       throw e;
@@ -161,7 +167,7 @@ public class Database {
       throw e;
     }
   }
-  
+
   public static String getUserEmail(String idNumber) throws SQLException {
     try (Connection conn = DriverManager.getConnection(driver)) {
       PreparedStatement prprdStmt = conn
@@ -177,7 +183,7 @@ public class Database {
       throw e;
     }
   }
-  
+
   public static void updateStatus(int appNumber, Status newStatus) throws SQLException {
     try (Connection conn = DriverManager.getConnection(driver)) {
       PreparedStatement prprdStmt = conn
@@ -190,6 +196,10 @@ public class Database {
       prprdStmt.clearParameters();
       prprdStmt.close();
       conn.close();
+
+      String applicantId = getApplicantId(appNumber);
+      createNotification(applicantId, new Notification("Application status",
+          "Your application status is updated to, " + newStatus.toString(), Util.getDateString()));
     } catch (SQLException e) {
       throw e;
     }
@@ -214,6 +224,8 @@ public class Database {
       var prprdStmt = conn.prepareStatement("UPDATE studentaccount SET userPassword = ? WHERE studentId = ?");
       prprdStmt.setString(1, hashedPwd);
       prprdStmt.setString(2, userId);
+      createNotification(userId, new Notification("Password changed successfully",
+          "You have successfully updated your password. Good job.", Util.getDateString()));
       return prprdStmt.executeUpdate();
     } catch (SQLException e) {
       throw e;
@@ -253,7 +265,113 @@ public class Database {
         + userId + "\"";
     return Database.getApplications(query);
   }
+
+  public static int createNotification(String studentId, Notification notification) throws SQLException {
+    String sql = "INSERT INTO Notification (studentId, notificationTitle, notificationMessage, notificationDate) VALUES (?, ?, ?, ?)";
+    try (Connection conn = DriverManager.getConnection(driver);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+      pstmt.setString(1, studentId);
+      pstmt.setString(2, notification.getTitle());
+      pstmt.setString(3, notification.getMessage());
+      pstmt.setString(4, notification.getDate());
+      return pstmt.executeUpdate();
+    } catch (SQLException e) {
+      throw e;
+    }
+  }
+
+  public static Notification readNotification(int notificationId) throws SQLException {
+    String sql = "SELECT * FROM Notification WHERE notificationId = ?";
+
+    try (Connection conn = DriverManager.getConnection(driver);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+      pstmt.setInt(1, notificationId);
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          return new Notification(
+              rs.getString("notificationTitle"),
+              rs.getString("notificationMessage"),
+              rs.getString("notificationDate"));
+        } else {
+          return null;
+        }
+      }
+    } catch (SQLException e) {
+      throw e;
+    }
+  }
+
+  public static ArrayList<Notification> readAllNotifications() throws SQLException {
+    String sql = "SELECT * FROM Notification";
+    ArrayList<Notification> notifications = new ArrayList<>();
+
+    try (Connection conn = DriverManager.getConnection(driver);
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        ResultSet rs = pstmt.executeQuery()) {
+      while (rs.next()) {
+        notifications.add(new Notification(
+            rs.getString("notificationTitle"),
+            rs.getString("notificationMessage"),
+            rs.getString("notificationDate")));
+      }
+    } catch (SQLException e) {
+      throw e;
+    }
+    return notifications;
+  }
+
+  public static boolean deleteNotification(int notificationId) throws SQLException {
+    String sql = "DELETE FROM Notification WHERE notificationId = ?";
+
+    try (Connection conn = DriverManager.getConnection(driver);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+      pstmt.setInt(1, notificationId);
+
+      int affectedRows = pstmt.executeUpdate();
+      return affectedRows > 0;
+    } catch (SQLException e) {
+      throw e;
+    }
+  }
   
+  public static boolean updateNotification(int notificationId, Notification notification) throws SQLException {
+    String sql = "UPDATE Notification SET notificationTitle = ?, notificationMessage = ?, notificationDate = ? WHERE notificationId = ?";
+
+    try (Connection conn = DriverManager.getConnection(driver);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+      pstmt.setString(1, notification.getTitle());
+      pstmt.setString(2, notification.getMessage());
+      pstmt.setString(3, notification.getDate());
+      pstmt.setInt(4, notificationId);
+
+      int affectedRows = pstmt.executeUpdate();
+      return affectedRows > 0;
+    } catch (SQLException e) {
+      throw e;
+    }
+  }
+  
+  public static ArrayList<Notification> getNotificationsByStudentId(String studentId) throws SQLException {
+    String sql = "SELECT * FROM Notification WHERE studentId = ?";
+    ArrayList<Notification> notifications = new ArrayList<>();
+
+    try (Connection conn = DriverManager.getConnection(driver);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+      pstmt.setString(1, studentId);
+      try (ResultSet rs = pstmt.executeQuery()) {
+        while (rs.next()) {
+          notifications.add(new Notification(rs.getString("notificationTitle"),
+              rs.getString("notificationMessage"),
+              rs.getString("notificationDate")));
+        }
+      }
+    } catch (SQLException e) {
+      throw e;
+    }
+    return notifications;
+  }
+
   public static void main(String[] args) throws SQLException {
+    updateStatus(35, Status.APPROVED);
   }
 }
