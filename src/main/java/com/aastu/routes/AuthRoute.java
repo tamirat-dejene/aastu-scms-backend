@@ -68,12 +68,11 @@ public class AuthRoute implements HttpHandler {
           "One Time Password", "Your one time password: " + OTP);
       SendEmail.sendEmail(emailMessage);
 
-      message.setMessage("Success");
+      message.setMessage("OTP Sent successfully");
       ReqRes.sendResponse(exchange, 200, ReqRes.makeJsonString(message));
     } catch (MessagingException | IOException | GeneralSecurityException e) {
-      System.out.println(e.getMessage());
-      message.setMessage(e.getMessage());
-      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, ReqRes.makeJsonString(message));
+      message.setMessage("Error sending OTP. Try again later");
+      ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_INTERNAL_ERROR, ReqRes.makeJsonString(message));
     }
   }
 
@@ -84,7 +83,7 @@ public class AuthRoute implements HttpHandler {
       message.setMessage("Request Accepted");
       ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_ACCEPTED, ReqRes.makeJsonString(message));
     } else {
-      message.setMessage("Incorrect otp");
+      message.setMessage("Incorrect otp. Try again later.");
       ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_CONFLICT, ReqRes.makeJsonString(message));
     }
   }
@@ -193,14 +192,14 @@ public class AuthRoute implements HttpHandler {
       Database.saveStudent(student, hashedPassword);
     } catch (SQLException e) {
       var error = new Message();
-      error.setMessage(e.getMessage());
+      error.setMessage("Account with this email is already in the db");
       ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_INTERNAL_ERROR, ReqRes.makeJsonString(error));
       return;
     }
 
     // Send success response
     var message = new Message();
-    message.setMessage("Operation Successful.");
+    message.setMessage("Registeration successful");
     ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_CREATED, ReqRes.makeJsonString(message));
   }
 

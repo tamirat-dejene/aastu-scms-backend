@@ -25,7 +25,7 @@ public class Validate {
 
   public static boolean password(String password) {
     if (password.length() < 6)
-      throw new Error("length must be > 6");
+      throw new Error("Pwd length must be > 6");
     return true;
   }
 

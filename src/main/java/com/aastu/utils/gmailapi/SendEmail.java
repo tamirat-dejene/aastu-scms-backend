@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -36,8 +36,8 @@ import com.google.api.services.gmail.model.Message;
 public class SendEmail {
   private static final String APPLICATION_NAME = "SCMS Mailer";
   private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
-  private static final String TOKENS_DIRECTORY_PATH = "http-server/src/main/resources/storedcredentials";
-  private static final List<String> SCOPES = Collections.singletonList(GmailScopes.GMAIL_SEND);
+  private static final String TOKENS_DIRECTORY_PATH = "src/main/resources/storedcredentials";
+  private static final List<String> SCOPES = Arrays.asList(GmailScopes.GMAIL_SEND, GmailScopes.GMAIL_LABELS, GmailScopes.GMAIL_METADATA);
   private static final String CREDENTIALS_FILE_PATH = "/credentials/credentials.json";
 
   private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
@@ -67,7 +67,7 @@ public class SendEmail {
     email.addRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(toEmailAddress));
     email.setSubject(subject);
     email.setText(bodyText);
-  
+
     return email;
   }
 
@@ -94,40 +94,44 @@ public class SendEmail {
 
   public static Message sendEmail(Message message)
       throws MessagingException, IOException, GeneralSecurityException {
-
     final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+
     Gmail service = new Gmail.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
         .setApplicationName(APPLICATION_NAME)
         .build();
 
+    
     try {
       // Create send message
       message = service.users().messages().send("me", message).execute();
+      var sentm = service.users().messages().list("me").setLabelIds(List.of("SENT")).execute().getMessages();
+
+      String message_id = message.getId();
+      var k = sentm.stream().filter(sent -> sent.getId().equals(message_id)).count();
+      System.out.println(k);
+      
       System.out.println("Message id: " + message.getId());
       System.out.println(message.toPrettyString());
       return message;
     } catch (GoogleJsonResponseException e) {
       GoogleJsonError error = e.getDetails();
-      if (error.getCode() == 403) {
-        System.err.println("Unable to send message: " + e.getDetails());
-      } else {
-        throw e;
-      }
+      System.out.println("Error code: " + error.getCode());
+      System.err.println(error.toPrettyString());
+      throw e;
     }
-    return null;
   }
-  
+
   static void test1() {
     try {
       MimeMessage mimeMessage;
-      mimeMessage = SendEmail.createEmail("tadiyos.dejene@aastustudent.edu.et", "me",
+      mimeMessage = SendEmail.createEmail("tamirat.dejene@aastustudent.edu.et", "me",
           "Hello buddy!",
           "How are you doing buddy?");
       Message message;
       message = SendEmail.createMessageWithEmail(mimeMessage);
       SendEmail.sendEmail(message);
     } catch (MessagingException | IOException | GeneralSecurityException e) {
-      System.out.println(e.getMessage());
+      System.out.println(e.getMessage() + " kmnnnnnnnnnnn");
     }
   }
 
