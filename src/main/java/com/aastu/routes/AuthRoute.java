@@ -30,6 +30,7 @@ public class AuthRoute implements HttpHandler {
       url = url.substring(0, url.length() - 1);
     switch (url) {
       case "/api/auth/login":
+      case "/api/auth/login/admin":
         handleLogin(exchange);
         break;
       case "/api/auth/signup":
@@ -57,7 +58,8 @@ public class AuthRoute implements HttpHandler {
     }
   }
 
-  private void handleEmail(HttpExchange exchange) {
+
+  private static void handleEmail(HttpExchange exchange) {
     // Try to send otp
     OTP = Util.generateOTP();
     Message message = new Message();
@@ -123,8 +125,13 @@ public class AuthRoute implements HttpHandler {
     Login login = (Login) ReqRes.makeModelFromJson(requestBody, Login.class);
     // Rechecking validity of the login info
     try {
-      Validate.idNumber(login.getIdNumber());
-      Validate.password(login.getPassword());
+      if (!exchange.getRequestURI().getPath().contains("admin")) { 
+        Validate.idNumber(login.getIdNumber());
+        Validate.password(login.getPassword());
+      } else {
+        Validate.departmentId(login.getIdNumber());
+        Validate.departmentPwd(login.getPassword());
+      }
     } catch (Error e) {
       String errorJson = null;
       var error = new Message();
@@ -136,7 +143,10 @@ public class AuthRoute implements HttpHandler {
 
     // Database query
     try {
-      String storedPassword = Database.getUserPassword(login.getIdNumber());
+      String storedPassword = exchange.getRequestURI().getPath().contains("admin")
+          ? Database.getAdminPassword(login.getIdNumber())
+          : Database.getUserPassword(login.getIdNumber());
+          
       var inputPassword = login.getPassword();
 
       if (!SecurePassword.authenticatePassword(inputPassword, storedPassword)) {

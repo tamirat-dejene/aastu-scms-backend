@@ -47,6 +47,17 @@ public class Validate {
     }
   }
 
+  public static boolean departmentId(String deptid) {
+    if (deptid.equals("REGISTRAR001") || deptid.equals("DORMITORY001") || deptid.equals("CAFETERIA001")
+        || deptid.equals("COLLEGEADMIN001"))
+      return true;
+    throw new Error("Invalid Department Id");
+  }
+
+  public static boolean departmentPwd(String pwd) {
+    return password(pwd);
+  }
+
   public static void main(String[] args) {
     
   }

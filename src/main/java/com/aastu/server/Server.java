@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
 import com.aastu.routes.AccountRoute;
+import com.aastu.routes.AdminRoute;
 import com.aastu.routes.AuthRoute;
 import com.aastu.routes.ClearanceRoute;
 import com.aastu.routes.NotificationRoute;
@@ -31,10 +32,11 @@ public class Server {
 
         server.createContext("/", new HelloHandler());
         
-        server.createContext("/api/clearance", new ClearanceRoute());
         server.createContext("/api/auth", new AuthRoute());
+        server.createContext("/api/admin/", new AdminRoute());
         server.createContext("/api/student", new StudentRoute());
         server.createContext("/api/account", new AccountRoute());
+        server.createContext("/api/clearance", new ClearanceRoute());
         server.createContext("/api/notification", new NotificationRoute());
 
         server.start();
@@ -46,6 +48,7 @@ public class Server {
     static class HelloHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
+            System.out.println(exchange.getRemoteAddress());
             String response = "Hello, There! You have landed AASTU-SCMS developed by AASTU Students!";
             exchange.sendResponseHeaders(200, response.getBytes().length);
             OutputStream os = exchange.getResponseBody();

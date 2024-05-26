@@ -43,6 +43,29 @@ import com.aastu.utils.Util;
         
         FOREIGN KEY StudentAccount(studentId) REFERENCES Student(studentId)
     );
+
+        CREATE TABLE ClearanceAdmin (
+      adminAccountId INT AUTO_INCREMENT PRIMARY KEY,
+        adminName VARCHAR(50) NOT NULL,
+        adminId VARCHAR(15) NOT NULL,
+        adminPassword VARCHAR(300) NOT NULL
+    );
+    CREATE TABLE DepratmentClearanceRequest (
+      applicationId INT PRIMARY KEY,
+      studentId VARCHAR(15) NOT NULL,
+      registrarStatus ENUM('PENDING', 'APPROVED', 'DECLINED'),
+      dormitoryStatus ENUM('PENDING', 'APPROVED', 'DECLINED'),
+      collegeAdminStatus ENUM('PENDING', 'APPROVED', 'DECLINED'),
+      diningOfficeStatus ENUM('PENDING', 'APPROVED', 'DECLINED'),
+      CHECK (registrarStatus IN ('PENDING', 'APPROVED', 'DECLINED')),
+      CHECK (dormitoryStatus IN ('PENDING', 'APPROVED', 'DECLINED')),
+      CHECK (collegeAdminStatus IN ('PENDING', 'APPROVED', 'DECLINED')),
+      CHECK (diningOfficeStatus IN ('PENDING', 'APPROVED', 'DECLINED')),
+      FOREIGN KEY (studentId) REFERENCES Student(studentId),
+      FOREIGN KEY (applicationId) REFERENCES ClearanceApplication(applicationId) 
+          ON DELETE CASCADE 
+          ON UPDATE CASCADE
+    );
  */
 
 public class Schema {

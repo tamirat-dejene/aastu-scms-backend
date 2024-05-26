@@ -140,7 +140,11 @@ public class Util {
     login.setPassword("abcdef");
 
     String token = Util.signUser(ReqRes.makeJsonString(login));
+    // String payload = token.split(".")[1];
 
+    // System.out.println(new String(Base64.getDecoder().decode(payload)));
+    System.out.println(token);
+    System.out.println(token.split("\\.").length);
     System.out.println(Util.getDecodedPayload(token));
 
     UUID id = Util.generateUniqueId("ETS1518/14");

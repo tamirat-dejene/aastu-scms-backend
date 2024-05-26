@@ -20,7 +20,7 @@ public class NotificationRoute implements HttpHandler {
   public void handle(HttpExchange exchange) throws IOException {
     switch (exchange.getRequestMethod()) {
       case "GET":
-        hanleGetNotification(exchange);
+        handleGetNotification(exchange);
         break;
 
       default:
@@ -28,7 +28,7 @@ public class NotificationRoute implements HttpHandler {
     }
   }
 
-  private void hanleGetNotification(HttpExchange exchange) {
+  private void handleGetNotification(HttpExchange exchange) {
     String authHeader = exchange.getRequestHeaders().getFirst("Authorization");
     if (authHeader == null) {
       ReqRes.sendResponse(exchange, HttpURLConnection.HTTP_BAD_REQUEST, "{ \"Authenticated\": \"false\"}");
